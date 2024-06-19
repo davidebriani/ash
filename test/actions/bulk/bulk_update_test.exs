@@ -269,6 +269,17 @@ defmodule Ash.Test.Actions.BulkUpdateTest do
       update :update_with_filter do
         change filter(expr(title == "foo"))
       end
+
+      update :add_related_posts do
+        require_atomic? false
+
+        argument :related_post_ids, {:array, :uuid} do
+          allow_nil? false
+          constraints min_length: 1
+        end
+
+        change manage_relationship(:related_post_ids, :related_posts, type: :append)
+      end
     end
 
     identities do
@@ -1027,6 +1038,67 @@ defmodule Ash.Test.Actions.BulkUpdateTest do
                Ash.bulk_update!([post], :update, %{title: "Updated Title 2"},
                  resource: Post,
                  strategy: :atomic_batches,
+                 return_records?: true,
+                 return_errors?: true,
+                 authorize?: false,
+                 load: [related_posts: keyset_pagination_query]
+               )
+
+      assert %Ash.Page.Keyset{
+               results: [%Post{title: "Related 2"}],
+               limit: 1,
+               count: 2,
+               more?: false,
+               before: nil,
+               after: ^keyset
+             } = post.related_posts
+    end
+
+    test "allows loading paginated many_to_many relationship after changing it" do
+      related_post1 = Ash.create!(Post, %{title: "Related 1"})
+      related_post2 = Ash.create!(Post, %{title: "Related 2"})
+      post = Ash.create!(Post, %{title: "Title"})
+
+      offset_pagination_query =
+        Post
+        |> Ash.Query.sort(title: :asc)
+        |> Ash.Query.select([:title])
+        |> Ash.Query.page(count: true, limit: 1)
+
+      assert %Ash.BulkResult{records: [post]} =
+               Ash.bulk_update!(
+                 [post],
+                 :add_related_posts,
+                 %{related_post_ids: [related_post1.id]},
+                 resource: Post,
+                 strategy: :stream,
+                 return_records?: true,
+                 return_errors?: true,
+                 authorize?: false,
+                 load: [related_posts: offset_pagination_query]
+               )
+
+      assert %Ash.Page.Offset{
+               results: [%Post{title: "Related 1", __metadata__: %{keyset: keyset}}],
+               limit: 1,
+               offset: 0,
+               count: 1,
+               more?: false
+             } = post.related_posts
+
+      keyset_pagination_query =
+        Post
+        |> Ash.Query.sort(title: :asc)
+        |> Ash.Query.select([:title])
+        |> Ash.Query.page(count: true, limit: 1, after: keyset)
+
+      assert %Ash.BulkResult{records: [post]} =
+               Ash.bulk_update!(
+                 [post],
+                 :add_related_posts,
+                 %{related_post_ids: [related_post2.id]},
+                 resource: Post,
+                 strategy: :stream,
                  return_records?: true,
                  return_errors?: true,
                  authorize?: false,
