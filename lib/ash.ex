@@ -1695,12 +1695,15 @@ defmodule Ash do
     query =
       case query do
         %Ash.Query{} = query ->
-          Ash.Query.set_tenant(query, query.tenant || Map.get(record.__metadata__, :tenant))
+          Ash.Query.set_tenant(
+            query,
+            query.tenant || Map.get(record.__metadata__, :tenant) || opts[:tenant]
+          )
 
         keyword ->
           resource
           |> Ash.Query.new()
-          |> Ash.Query.set_tenant(Map.get(record.__metadata__, :tenant))
+          |> Ash.Query.set_tenant(Map.get(record.__metadata__, :tenant) || opts[:tenant])
           |> Ash.Query.load(keyword)
       end
 

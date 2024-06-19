@@ -107,7 +107,8 @@ defmodule Ash.Actions.Read.Relationships do
           )
           |> Ash.Query.set_context(%{
             private: %{async_limiter: query.context[:private][:async_limiter]}
-          })}}
+          })
+          |> Ash.Query.set_tenant(query.tenant)}}
       else
         related_query(relationship_name, records, related_query, query)
       end

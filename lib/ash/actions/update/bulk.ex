@@ -1216,6 +1216,7 @@ defmodule Ash.Actions.Update.Bulk do
     resource
     |> Ash.Changeset.new()
     |> Map.put(:domain, domain)
+    |> Ash.Changeset.set_tenant(opts[:tenant])
     |> Ash.Changeset.filter(opts[:filter])
     |> Ash.Actions.Helpers.add_context(opts)
     |> Ash.Changeset.set_context(opts[:context] || %{})
@@ -2233,7 +2234,8 @@ defmodule Ash.Actions.Update.Bulk do
            domain: domain,
            actor: opts[:actor],
            authorize?: opts[:authorize?],
-           tracer: opts[:tracer]
+           tracer: opts[:tracer],
+           tenant: opts[:tenant]
          ) do
       {:ok, records} ->
         Ash.load(
@@ -2243,7 +2245,8 @@ defmodule Ash.Actions.Update.Bulk do
           domain: domain,
           actor: opts[:actor],
           authorize?: opts[:authorize?],
-          tracer: opts[:tracer]
+          tracer: opts[:tracer],
+          tenant: opts[:tenant]
         )
         |> Ash.Actions.Helpers.select(changeset)
 

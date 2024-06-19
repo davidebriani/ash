@@ -1881,7 +1881,7 @@ defmodule Ash.Changeset do
           |> Ash.Query.do_filter(values)
           |> Ash.Query.limit(1)
           |> Ash.Query.set_context(%{private: %{internal?: true}})
-          |> Ash.read_one(authorize?: false)
+          |> Ash.read_one(authorize?: false, tenant: tenant)
           |> case do
             {:ok, nil} ->
               changeset
@@ -3231,7 +3231,7 @@ defmodule Ash.Changeset do
           resource: changeset.resource,
           resource_short_name: Ash.Resource.Info.short_name(changeset.resource),
           actor: changeset.context[:private][:actor],
-          tenant: changeset.context[:private][:tenant],
+          tenant: changeset.tenant,
           action: changeset.action && changeset.action.name,
           authorize?: changeset.context[:private][:authorize?]
         }
@@ -3282,7 +3282,7 @@ defmodule Ash.Changeset do
           resource: changeset.resource,
           resource_short_name: Ash.Resource.Info.short_name(changeset.resource),
           actor: changeset.context[:private][:actor],
-          tenant: changeset.context[:private][:actor],
+          tenant: changeset.tenant,
           action: changeset.action && changeset.action.name,
           authorize?: changeset.context[:private][:authorize?]
         }

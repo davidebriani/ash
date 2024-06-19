@@ -19,6 +19,13 @@ defmodule Ash.Actions.Create do
          action_type: :create
        )}
     else
+      changeset =
+        if opts[:tenant] do
+          Ash.Changeset.set_tenant(changeset, opts[:tenant])
+        else
+          changeset
+        end
+
       {changeset, opts} = Ash.Actions.Helpers.set_context_and_get_opts(domain, changeset, opts)
       changeset = Helpers.apply_opts_load(changeset, opts)
 

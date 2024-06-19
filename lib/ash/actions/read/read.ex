@@ -39,6 +39,9 @@ defmodule Ash.Actions.Read do
     end
 
     {query, opts} = Ash.Actions.Helpers.set_context_and_get_opts(domain, query, opts)
+
+    query = Ash.Query.set_tenant(query, opts[:tenant])
+
     query = Helpers.apply_opts_load(query, opts)
 
     query = %{query | domain: domain}
@@ -125,6 +128,8 @@ defmodule Ash.Actions.Read do
         timeout: opts[:timeout],
         tenant: opts[:tenant]
       )
+
+    query = Ash.Query.set_tenant(query, opts[:tenant] || query.tenant)
 
     initial_query = query
 
@@ -441,6 +446,7 @@ defmodule Ash.Actions.Read do
                opts
              ),
            {:ok, query} <- paginate(query, action, opts[:skip_pagination?]),
+           query = Ash.Query.set_tenant(query, opts[:tenant] || query.tenant),
            {:ok, data_layer_query} <-
              Ash.Query.data_layer_query(query, data_layer_calculations: data_layer_calculations),
            {:ok, results} <-
